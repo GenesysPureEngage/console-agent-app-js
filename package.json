@@ -1,0 +1,28 @@
+{
+  "name": "console-agent-app-js",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/app.js",
+  "author": "",
+  "keywords": [
+    "http",
+    "js",
+    "genesys",
+    "workspace",
+    "voice",
+    "calls",
+    "conferences",
+    "call-transfer",
+    "call-recording",
+    "agent-state"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/GenesysPureEngage/console-agent-app-js.git"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "yargs": "^8.0.2",
+    "genesys-workspace-client-js": "^1.0.84"
+  }
+}
