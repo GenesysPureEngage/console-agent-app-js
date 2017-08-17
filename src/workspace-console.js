@@ -10,11 +10,16 @@ class WorkspaceConsole {
     this._options = options;
 
     this._api = new WorkspaceApi(options);
-    this._api.on('voice.call.added', c => this._write(`Call [${c.id}] added (${c.state}).`));
-    this._api.on('voice.call.updated', c => this._write(`Call [${c.id}] updated (${c.state}).`));
-    this._api.on('voice.call.removed', c => this._write(`Call [${c.id}] removed (${c.state}).`));
-    this._api.on('voice.call.id-changed', c => this._write(`Call [${c.previousConnId}] id changed to [${c.id}].`));
-    this._api.on('voice.dn.updated', d => this._write(`Dn [${d.number}] updated (${d.agentState}).`));
+    this._api.on('CallStateChanged', msg => {
+      if (msg.previousConnId) {
+        this._write(`Call [${msg.previousConnId}] id changed to [${msg.call.id}].`);
+      } else {
+        this._write(`CallStateChanged: id [${msg.call.id}] state [${msg.call.state}].`);
+      }
+    });
+    this._api.on('DnStateChanged', msg => this._write(
+      `DnStateChanged: number [${msg.dn.number}] state [${msg.dn.agentState}]` +
+      ` workMode [${msg.dn.agentWorkMode}].`));
   }
 
   async _prompt() {
