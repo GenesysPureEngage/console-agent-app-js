@@ -13,7 +13,7 @@ You can run the console sample by passing in command line arguments as shown in 
 | -------------    |:-----------------:| ----------: |------------------------------ |
 | initialize       | init, i           |             | initialize the API using the arguments provided at startup                      |
 | destroy          | logout, l         |             | logout and cleanup                      |
-| activat-channels | ac                | agentId, dn | activate the voice channel using the provided resources             |
+| activate-channels | ac                | agentId, dn | activate the voice channel using the provided resources             |
 | user             | u                 |             | print information about the user                      |
 | dn               |                   |             | print the current state of the dn                      |
 | calls            |                   |             | print the list of active calls                      |

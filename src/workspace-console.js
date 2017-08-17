@@ -48,7 +48,7 @@ class WorkspaceConsole {
     this._write('hold|h <id>');
     this._write('retrieve|ret <id>');
     this._write('release|rel <id>');
-    this._write('initiate-confernence|ic <id> <destination>');
+    this._write('initiate-conference|ic <id> <destination>');
     this._write('complete-conference|cc <id> <parentConnId>');
     this._write('initiate-transfer|it <id> <destination>');
     this._write('complete-transfer|ct <id> <parentConnId>');
