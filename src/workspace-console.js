@@ -48,17 +48,39 @@ class WorkspaceConsole {
     this._write('calls');
     this._write('ready|r');
     this._write('not-ready|nr');
+    this._write('dnd-on');
+    this._write('dnd-off');
+    this._write('voice-login');
+    this._write('voice-logout');
+    this._write('set-forward <destination>');
+    this._write('cancel-forward');
     this._write('make-call|mc <destination>');
     this._write('answer|a <id>');
     this._write('hold|h <id>');
     this._write('retrieve|ret <id>');
     this._write('release|rel <id>');
+    this._write('clear-call <id>');
+    this._write('redirect <id> <destination>');
     this._write('initiate-conference|ic <id> <destination>');
     this._write('complete-conference|cc <id> <parentConnId>');
     this._write('initiate-transfer|it <id> <destination>');
     this._write('complete-transfer|ct <id> <parentConnId>');
-    this._write('target-search|ts <searchTerm> <limit>');
+    this._write('delete-from-conference|dfc <id> <dnToDrop>');
+    this._write('send-dtmf|dtmf <id> <digits>');
     this._write('alternate|alt <id> <heldConnId>');
+    this._write('merge <id> <otherConnId>');
+    this._write('reconnect <id> <heldConnId>');
+    this._write('single-step-transfer <id> <destination>');
+    this._write('single-step-conference <id> <destination>');
+    this._write('attach-user-data|aud <id> <key> <value>');
+    this._write('update-user-data|uud <id> <key> <value>');
+    this._write('delete-user-data-pair|dp <id> <key>');
+    this._write('start-recording <id>');
+    this._write('pause-recording <id>');
+    this._write('resume-recording <id>');
+    this._write('stop-recording <id>');
+    this._write('send-user-event <key> <value> <callUuid>');
+    this._write('target-search|ts <searchTerm> <limit>');
     this._write('clear');
     this._write('config');
     this._write('exit|x');
@@ -141,8 +163,8 @@ class WorkspaceConsole {
         await this._activateChannels([]);  
       }
     } catch (e) {
-      this._log('autoLogin failed!');
-      this._log(e);
+      this._write('autoLogin failed!');
+      this._write(e);
     }
   }
 
@@ -187,6 +209,7 @@ class WorkspaceConsole {
         }
 
         let id;
+        let data;
         let params;
         let destination;
 
@@ -266,6 +289,40 @@ class WorkspaceConsole {
             await this._api.voice.ready();
             break;
 
+          case 'dnd-on':
+            this._write('Sending dnd-on...');
+            await this._api.voice.dndOn();
+            break;
+
+          case 'dnd-off':
+            this._write('Sending dnd-off...');
+            await this._api.voice.dndOff();
+            break;
+
+          case 'voice-login':
+            this._write('Sending voice login...');
+            await this._api.voice.login();
+            break;
+
+          case 'voice-logout':
+            this._write('Sending voice logout...');
+            await this._api.voice.logout();
+            break;
+
+          case 'set-forward':
+            this._write('Sending set-forward...');
+            if (args.length < 1) {
+              this._write('Usage: set-forward <destination>');
+            } else {
+              await this._api.voice.setForward(args[0]);
+            }
+            break;
+
+          case 'cancel-forward':
+            this._write('Sending cancel-forward...');
+            await this._api.voice.cancelForward();
+            break;
+
           case 'make-call':
           case 'mc':
             await this._makeCall(args); 
@@ -279,6 +336,27 @@ class WorkspaceConsole {
             } else {
               this._write(`Sending release for call [${id}]...`);
               await this._api.voice.releaseCall(id);
+            }
+            break;
+
+          case 'clear-call':
+            id = this._getCallId(args);
+            if (!id) {
+              this._write('Usage: clear-call <id>');
+            } else {
+              this._write(`Sending clear for call [${id}]...`);
+              await this._api.voice.clearCall(id);
+            }
+            break;
+
+          case 'redirect':
+            let destination = args[args.length -1];
+            id = this._getCallId(args.length == 1 ? [] : args);
+            if (!id) {
+              this._write('Usage: redirect <id> <destination>');
+            } else {
+              this._write(`Sending redirect for call [${id}] with destination [${destination}]...`);
+              await this._api.voice.redirectCall(id, destination);
             }
             break;
 
@@ -343,6 +421,20 @@ class WorkspaceConsole {
             }
             break;
 
+          case 'delete-from-conference':
+          case 'dfc':
+            // If there is only one argument, take it as the party
+            let dnToDrop = args[args.length -1];
+            id = this._getCallId(args.length == 1 ? [] : args);
+            if (!id) {
+              this._write('Usage: delete-from-conference <id> <dnToDrop');
+            } else {
+              this._write(`Sending delete-from-conference for call [${id}] with dnToDrop [${dnToDrop}]...`);
+              await this._api.voice.deleteFromConference(id, dnToDrop);
+            }
+            break;
+
+
           case 'initiate-transfer':
           case 'it':
             if (args.length < 1) {
@@ -378,6 +470,157 @@ class WorkspaceConsole {
             } else {
               this._write(`Sending alternate for call [${args[0]}] and heldConnId [${args[1]}]...`);
               await this._api.voice.alternateCalls(args[0], args[1]);
+            }
+            break;
+
+          case 'merge':
+            if (args.length < 2) {
+              this._write('Usage: merge <id> <otherConnId>');
+            } else {
+              this._write(`Sending merge for call [${args[0]}] and otherConnId [${args[1]}]...`);
+              await this._api.voice.mergeCalls(args[0], args[1]);
+            }
+            break;
+
+          case 'reconnect':
+            if (args.length < 2) {
+              this._write('Usage: reconnect <id> <heldConnId');
+            } else {
+              this._write(`Sending reconnect for call [${args[0]}] and heldConnId [${args[1]}]...`);
+              await this._api.voice.reconnectCall(args[0], args[1]);
+            }
+            break;
+
+          case 'single-step-transfer':
+            if (args.length < 1) {
+              this._write('Usage: single-step-transfer <id> <destination>');
+            } else {
+              // If there is only one argument take it as the destination.
+              destination = args[args.length - 1];
+              id = this._getCallId(args.length === 1 ? [] : args);
+              if (!id) {
+                this._write('Usage: single-step-transfer <id> <destination>');
+              } else {
+                this._write(`Sending single-step-transfer for call [${id}] and destination [${destination}]...`);
+                await this._api.voice.singleStepTransfer(id, destination);
+              }
+            }
+            break;
+
+          case 'single-step-conference':
+            if (args.length < 1) {
+              this._write('Usage: single-step-conference <id> <destination>');
+            } else {
+              // If there is only one argument take it as the destination.
+              destination = args[args.length - 1];
+              id = this._getCallId(args.length === 1 ? [] : args);
+              if (!id) {
+                this._write('Usage: single-step-conference <id> <destination>');
+              } else {
+                this._write(`Sending single-step-conference for call [${id}] and destination [${destination}]...`);
+                await this._api.voice.singleStepConference(id, destination);
+              }
+            }
+            break;
+
+          case 'attach-user-data':
+          case 'aud':
+            id = this._getCallId(args);
+            if (!id || args.length < 3) {
+              this._write('Usage: attach-user-data <id> <key> <value>');
+            } else {
+              data = {};
+              data[args[1]] = args[2];
+              this._write(`Sending attach-user-data for call [${id}]...`);
+              await this._api.voice.attachUserData(id, data);
+            }
+            break;
+
+          case 'update-user-data':
+          case 'uud':
+            id = this._getCallId(args);
+            if (!id || args.length < 3) {
+              this._write('Usage: update-user-data <id> <key> <value>');
+            } else {
+              data = {};
+              data[args[1]] = args[2];
+              this._write(`Sending update-user-data for call [${id}]...`);
+              await this._api.voice.updateUserData(id, data);
+            }
+            break;
+
+          case 'delete-user-data-pair':
+          case 'dep':
+            id = this._getCallId(args);
+            if (!id || args.length < 2) {
+              this._write('Usage: delete-user-data-pair <id> <key>');
+            } else {
+              this._write(`Sending delete-user-data-pair for call [${id}]...`);
+              await this._api.voice.deleteUserDataPair(id, args[1]);
+            }
+            break;
+
+          case 'send-dtmf':
+          case 'dtmf':
+            id = this._getCallId(args);
+            if (!id || args.length < 2) {
+              this._write('Usage: send-dtmf <id> <digits>');
+            } else {
+              this._write(`Sending send-dtmf for call [${id}] with dtmfDigits [${args[1]}]...`);
+              await this._api.voice.sendDtmf(id, args[1]);
+            }
+            break;
+
+          case 'start-recording':
+            id = this._getCallId(args);
+            if (!id) {
+              this._write('Usage: start-recording <id>');
+            } else {
+              this._write(`Sending start-recording for call [${id}]...`);
+              await this._api.voice.startRecording(id);
+            }
+            break;
+
+          case 'pause-recording':
+            id = this._getCallId(args);
+            if (!id) {
+              this._write('Usage: pause-recording <id>');
+            } else {
+              this._write(`Sending pause-recording for call [${id}]...`);
+              await this._api.voice.pauseRecording(id);
+            }
+            break;
+
+          case 'resume-recording':
+            id = this._getCallId(args);
+            if (!id) {
+              this._write('Usage: resume-recording <id>');
+            } else {
+              this._write(`Sending resume-recording for call [${id}]...`);
+              await this._api.voice.resumeRecording(id);
+            }
+            break;
+
+          case 'stop-recording':
+            id = this._getCallId(args);
+            if (!id) {
+              this._write('Usage: stop-recording <id>');
+            } else {
+              this._write(`Sending stop-recording for call [${id}]...`);
+              await this._api.voice.stopRecording(id);
+            }
+            break;
+
+          case 'send-user-event':
+            if (args.length < 2) {
+              this._write('Usage: send-user-event <key> <value> <callUuid>');
+            } else {
+              data = {};
+              data[args[0]] = args[1];
+              let uuid = args.length === 3 ? args[2] : null;
+
+              this._write(`Sending send-user-event with data [${JSON.stringify(data)}] and callUuid [${uuid}]...`);
+              await this._api.voice.sendUserEvent(data, uuid);
             }
             break;
 
