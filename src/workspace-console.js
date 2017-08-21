@@ -19,9 +19,18 @@ class WorkspaceConsole {
         this._write(`CallStateChanged: id [${msg.call.id}] state [${msg.call.state}].`);
       }
     });
-    this._api.on('DnStateChanged', msg => this._write(
-      `DnStateChanged: number [${msg.dn.number}] state [${msg.dn.agentState}]` +
-      ` workMode [${msg.dn.agentWorkMode}].`));
+    this._api.on('DnStateChanged', msg => {
+      let summary =  `DnStateChanged: number [${msg.dn.number}] state [${msg.dn.agentState}]` +
+      ` workMode [${msg.dn.agentWorkMode}]`;
+      if (msg.dn.dnd) {
+        summary += ' dnd [on]';
+      }
+
+      if (msg.dn.forwardTo) {
+        summary += ` forwardTo [${msg.dn.forwardTo}]`;
+      }
+      this._write(summary + '.');
+    });
   }
 
   async _prompt() {
@@ -72,8 +81,8 @@ class WorkspaceConsole {
     this._write('alternate|alt <id> <heldConnId>');
     this._write('merge <id> <otherConnId>');
     this._write('reconnect <id> <heldConnId>');
-    this._write('single-step-transfer <id> <destination>');
-    this._write('single-step-conference <id> <destination>');
+    this._write('single-step-transfer|sst <id> <destination>');
+    this._write('single-step-conference|ssc <id> <destination>');
     this._write('attach-user-data|aud <id> <key> <value>');
     this._write('update-user-data|uud <id> <key> <value>');
     this._write('delete-user-data-pair|dp <id> <key>');
@@ -378,7 +387,7 @@ class WorkspaceConsole {
             break;
 
           case 'redirect':
-            let destination = args[args.length -1];
+            destination = args[args.length -1];
             id = this._getCallId(args.length == 1 ? [] : args);
             if (!id) {
               this._write('Usage: redirect <id> <destination>');
@@ -520,6 +529,7 @@ class WorkspaceConsole {
             break;
 
           case 'single-step-transfer':
+          case 'sst':
             if (args.length < 1) {
               this._write('Usage: single-step-transfer <id> <destination>');
             } else {
@@ -536,6 +546,7 @@ class WorkspaceConsole {
             break;
 
           case 'single-step-conference':
+          case 'ssc':
             if (args.length < 1) {
               this._write('Usage: single-step-conference <id> <destination>');
             } else {
@@ -557,8 +568,11 @@ class WorkspaceConsole {
             if (!id || args.length < 3) {
               this._write('Usage: attach-user-data <id> <key> <value>');
             } else {
-              data = {};
-              data[args[1]] = args[2];
+              data = [{
+                key: args[1],
+                type: 'str',
+                value: args[2]
+              }];
               this._write(`Sending attach-user-data for call [${id}]...`);
               await this._api.voice.attachUserData(id, data);
             }
@@ -570,15 +584,18 @@ class WorkspaceConsole {
             if (!id || args.length < 3) {
               this._write('Usage: update-user-data <id> <key> <value>');
             } else {
-              data = {};
-              data[args[1]] = args[2];
+              data = [{
+                key: args[1],
+                type: 'str',
+                value: args[2]
+              }];
               this._write(`Sending update-user-data for call [${id}]...`);
               await this._api.voice.updateUserData(id, data);
             }
             break;
 
           case 'delete-user-data-pair':
-          case 'dep':
+          case 'dp':
             id = this._getCallId(args);
             if (!id || args.length < 2) {
               this._write('Usage: delete-user-data-pair <id> <key>');
@@ -595,7 +612,7 @@ class WorkspaceConsole {
               this._write('Usage: send-dtmf <id> <digits>');
             } else {
               this._write(`Sending send-dtmf for call [${id}] with dtmfDigits [${args[1]}]...`);
-              await this._api.voice.sendDtmf(id, args[1]);
+              await this._api.voice.sendDTMF(id, args[1]);
             }
             break;
 
@@ -643,8 +660,11 @@ class WorkspaceConsole {
             if (args.length < 2) {
               this._write('Usage: send-user-event <key> <value> <callUuid>');
             } else {
-              data = {};
-              data[args[0]] = args[1];
+              data = [{
+                key: args[0],
+                type: 'str',
+                value: args[1]
+              }];
               let uuid = args.length === 3 ? args[2] : null;
 
               this._write(`Sending send-user-event with data [${JSON.stringify(data)}] and callUuid [${uuid}]...`);
