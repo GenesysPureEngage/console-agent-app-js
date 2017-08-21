@@ -1,5 +1,7 @@
 const readline = require('readline');
 const WorkspaceApi = require('genesys-workspace-client-js');
+const rp = require('request-promise-native');
+const url = require('url');
 
 class WorkspaceConsole {
   constructor(options) {
@@ -142,9 +144,35 @@ class WorkspaceConsole {
     return params;
   }
 
+  async _getAuthCode() {
+    this._write('Getting auth code...');
+    
+    let requestOptions = {
+      url: `${this._options.baseUrl}/auth/v3/oauth/authorize?response_type=code&client_id=${this._options.clientId}&redirect_uri=http://localhost`,
+      headers: {
+        'authorization':  'Basic ' + new Buffer(`${this._options.username}:${this._options.password}`).toString('base64'),
+      },
+      resolveWithFullResponse: true,
+      simple: false,
+      followRedirect: false
+    }
+
+    let response = await rp(requestOptions);
+    if (!response.headers['location']) {
+      return null;
+    }
+
+    const location = url.parse(response.headers['location'], true);
+    let code = location.query.code;
+    this._write(`Auth code is [${code}]...`);
+
+    return code;
+  }
+
   async _init() {
+    let code = await this._getAuthCode();
     this._write('Initializing api...');
-    await this._api.initialize();
+    await this._api.initialize({code, redirectUri: 'http://localhost'});
     this._write('Initialization complete.');
   }
 
