@@ -55,6 +55,7 @@ class WorkspaceConsole {
     this._write('destroy|logout|l');
     this._write('activate-channels|ac <agentId> <dn>');
     this._write('user|u');
+    this._write('configuration|c');
     this._write('dn');
     this._write('calls');
     this._write('ready|r');
@@ -93,7 +94,7 @@ class WorkspaceConsole {
     this._write('send-user-event <key> <value> <callUuid>');
     this._write('target-search|ts <searchTerm> <limit>');
     this._write('clear');
-    this._write('config');
+    this._write('console-config');
     this._write('exit|x');
     this._write('debug|d');
     this._write('help|?');
@@ -267,6 +268,15 @@ class WorkspaceConsole {
             this._write('Debug enabled: ' + this._api.isDebugEnabled());
             break;
 
+          case 'configuration':
+          case 'c':
+            if (this._api.configuration) {
+              this._write('Configuration:\n' + JSON.stringify(this._api.configuration, null, 2));
+            } else {
+              this._write('No configuration available (is the API initialized?');
+            }
+            break;
+            
           case 'dn':
             let dn = this._api.voice.dn;
             if (dn) {
@@ -700,7 +710,7 @@ class WorkspaceConsole {
             }
             break;
 
-          case 'config': 
+          case 'console-config': 
             this._write(JSON.stringify(this._options, null, 2));
             break;
 

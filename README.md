@@ -15,6 +15,7 @@ You can run the console sample by passing in command line arguments as shown in 
 | destroy          | logout, l         |             | logout and cleanup                      |
 | activate-channels | ac                | agentId, dn | activate the voice channel using the provided resources             |
 | user             | u                 |             | print information about the user                      |
+| configuration    | c                 |             | print configuration returned by the server |
 | dn               |                   |             | print the current state of the dn                      |
 | calls            |                   |             | print the list of active calls                      |
 | ready            | r                 |             | set agent state to ready                      |
@@ -53,7 +54,7 @@ You can run the console sample by passing in command line arguments as shown in 
 | send-user-event |    | key, value, callUuid | send EventUserEvent with the provided key/value pair and optional callUuid. |
 | target-search              |ts                   |searchTerm, limit            | search for targets using the specified search term                      |
 | clear              |                   |            | clear the output window                      |
-| config              |                   |            | print the console config                      |
+| console-config              |                   |            | print the console config                      |
 | exit              |x                   |            | logout if necessary then exit                      |
 | debug              |d                  |            | toggle debug output                      |
 | help              |?                   |            | print the list of available commands                      |
