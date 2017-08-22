@@ -3,7 +3,7 @@
 ## Running
 
 You can run the console sample by passing in command line arguments as shown in this example:<br>
-`node src/app.js --apiKey=<key> --clientId=<clientId> --baseUrl=<url> --username=<user> --password=<p> --debugEnabled=<true or false> --defaultAgentId=<optional> --defaultDn=<optional> --defaultDestination=<optional>`
+`node src/app.js --apiKey=<key> --clientId=<clientId> --baseUrl=<url> --authBaseUrl=<optional> --username=<tenant\\username> --password=<p> --debugEnabled=<true or false> --defaultAgentId=<optional> --defaultDn=<optional> --defaultDestination=<optional>`
 
 
 

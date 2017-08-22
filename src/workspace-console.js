@@ -11,7 +11,7 @@ class WorkspaceConsole {
     });
     this._options = options;
 
-    this._api = new WorkspaceApi(options);
+    this._api = new WorkspaceApi(options.baseUrl, options.apiKey, options.debugEnabled);
     this._api.on('CallStateChanged', msg => {
       if (msg.previousConnId) {
         this._write(`Call [${msg.previousConnId}] id changed to [${msg.call.id}].`);
@@ -33,9 +33,9 @@ class WorkspaceConsole {
     });
   }
 
-  async _prompt() {
+  async _prompt(msg) {
     return new Promise((resolve, reject) => {
-      let answer = this._rl.question('cmd>', answer => {
+      let answer = this._rl.question(msg || 'cmd>', answer => {
         resolve(answer);
       });
     });
@@ -155,12 +155,16 @@ class WorkspaceConsole {
   }
 
   async _getAuthCode() {
-    this._write('Getting auth code...');
-    
+    let baseUrl = this._options.authBaseUrl || this._options.baseUrl;
+    let username = this._options.username || await this._prompt('Username: ');
+    let password = this._options.password || await this._prompt('Password: ');
+    let clientId = this._options.clientId || await this._prompt('ClientId: ');
+
+    this._write('Getting auth code...');    
     let requestOptions = {
-      url: `${this._options.baseUrl}/auth/v3/oauth/authorize?response_type=code&client_id=${this._options.clientId}&redirect_uri=http://localhost`,
+      url: `${baseUrl}/auth/v3/oauth/authorize?response_type=code&client_id=${clientId}&redirect_uri=http://localhost`,
       headers: {
-        'authorization':  'Basic ' + new Buffer(`${this._options.username}:${this._options.password}`).toString('base64'),
+        'authorization':  'Basic ' + new Buffer(`${username}:${password}`).toString('base64'),
       },
       resolveWithFullResponse: true,
       simple: false,
@@ -169,6 +173,7 @@ class WorkspaceConsole {
 
     let response = await rp(requestOptions);
     if (!response.headers['location']) {
+      this._write('Error: No auth code...');
       return null;
     }
 
@@ -181,6 +186,9 @@ class WorkspaceConsole {
 
   async _init() {
     let code = await this._getAuthCode();
+    if (!code) {
+      return;
+    }
     this._write('Initializing api...');
     await this._api.initialize({code, redirectUri: 'http://localhost'});
     this._write('Initialization complete.');
@@ -195,7 +203,7 @@ class WorkspaceConsole {
 
   async _doAutoLogin() {
     try {
-      if (this._options.autoLogin) {
+      if (this._options.autoLogin === 'true') {
         this._write('autoLogin is true...');    
         await this._init();
         await this._activateChannels([]);  
@@ -705,7 +713,7 @@ class WorkspaceConsole {
             if (user) {
               this._write('User details:\n' +
                 'employeeId: ' + user.employeeId + '\n' +
-                'agentId: ' + user.agentId || '' + '\n' +
+                'agentId: ' + user.agentLogin || '' + '\n' +
                 'defaultPlace: ' + user.defaultPlace || '' + '\n');
             }
             break;
