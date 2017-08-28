@@ -11,7 +11,7 @@ class WorkspaceConsole {
     });
     this._options = options;
 
-    this._api = new WorkspaceApi(options.baseUrl, options.apiKey, options.debugEnabled);
+    this._api = new WorkspaceApi(options.apiKey, options.baseUrl, options.debugEnabled);
     this._api.on('CallStateChanged', msg => {
       if (msg.previousConnId) {
         this._write(`Call [${msg.previousConnId}] id changed to [${msg.call.id}].`);
