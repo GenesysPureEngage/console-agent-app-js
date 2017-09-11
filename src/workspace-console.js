@@ -1,6 +1,6 @@
 const readline = require('readline');
+const authorization = require('genesys-authorization-client-js');
 const WorkspaceApi = require('genesys-workspace-client-js');
-const rp = require('request-promise-native');
 const url = require('url');
 
 class WorkspaceConsole {
@@ -154,43 +154,39 @@ class WorkspaceConsole {
     return params;
   }
 
-  async _getAuthCode() {
+  async _getAuthToken() {
+    this._write('Getting auth token...');
     let baseUrl = this._options.authBaseUrl || this._options.baseUrl;
     let username = this._options.username || await this._prompt('Username: ');
     let password = this._options.password || await this._prompt('Password: ');
     let clientId = this._options.clientId || await this._prompt('ClientId: ');
+    let clientSecret = this._options.clientSecret || await this._prompt('Client Secret: ');
 
-    this._write('Getting auth code...');    
-    let requestOptions = {
-      url: `${baseUrl}/auth/v3/oauth/authorize?response_type=code&client_id=${clientId}&redirect_uri=http://localhost`,
-      headers: {
-        'authorization':  'Basic ' + new Buffer(`${username}:${password}`).toString('base64'),
-      },
-      resolveWithFullResponse: true,
-      simple: false,
-      followRedirect: false
-    }
+    let client = new authorization.ApiClient();
+    client.basePath = `${baseUrl}/auth/v3`;
+    client.defaultHeaders = { 'x-api-key': this._options.apiKey };
+    client.enableCookies = true;
 
-    let response = await rp(requestOptions);
-    if (!response.headers['location']) {
-      this._write('Error: No auth code...');
-      return null;
-    }
-
-    const location = url.parse(response.headers['location'], true);
-    let code = location.query.code;
-    this._write(`Auth code is [${code}]...`);
-
-    return code;
+    let authApi = new authorization.AuthenticationApi(client);
+    let opts = {
+      authorization: "Basic " + new Buffer(`${clientId}:${clientSecret}`).toString("base64"),
+      clientId: clientId,
+      scope: '*',
+      username: username,
+      password: password
+    };
+    
+    let response = await authApi.retrieveTokenWithHttpInfo("password", opts);
+    return response.data.access_token;
   }
 
   async _init() {
-    let code = await this._getAuthCode();
-    if (!code) {
+    let token = await this._getAuthToken();
+    if (!token) {
       return;
     }
     this._write('Initializing api...');
-    await this._api.initialize({code, redirectUri: 'http://localhost'});
+    await this._api.initialize({token});
     this._write('Initialization complete.');
   }
 

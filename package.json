@@ -23,8 +23,7 @@
   "license": "MIT",
   "dependencies": {
     "yargs": "^8.0.2",
-    "request": "2.81.0",
-    "request-promise-native": "1.0.4",
-    "genesys-workspace-client-js": "^1.0.109"
+    "genesys-workspace-client-js": "^1.0.109",
+    "genesys-authorization-client-js": "1.0.55"
   }
 }
