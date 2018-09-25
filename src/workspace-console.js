@@ -164,7 +164,9 @@ class WorkspaceConsole {
 
     let client = new authorization.ApiClient();
     client.basePath = `${baseUrl}/auth/v3`;
-    client.defaultHeaders = { 'x-api-key': this._options.apiKey };
+    if (this._options.apiKey) {
+      client.defaultHeaders = { 'x-api-key': this._options.apiKey };
+    }
     client.enableCookies = true;
 
     let authApi = new authorization.AuthenticationApi(client);
